@@ -17,7 +17,9 @@
 
 #include <QFileDialog>
 
+
 #include "../include/btn/main_window.hpp"
+
 
 /*****************************************************************************
 ** Namespaces
@@ -51,10 +53,14 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     ui.view_logging_sub->setModel(qnode.loggingModel_sub());  //add
       QObject::connect(&qnode, SIGNAL(loggingUpdated_sub()), this, SLOT(updateLoggingView_sub()));  //add
     //QObject::connect(ui.sent_cmd, SIGNAL(clicked()), this, SLOT(pub_cmd()));
+      QObject::connect(&qnode,SIGNAL(poseUpdated()),this,SLOT(serialSendMocapData()));
 
 
-    //ui.cb_data->addItem(tr( "1" ));
-    //ui.cb_data->addItem(tr( "2" ));
+      /*********************
+      ** Port
+      **********************/
+      SPort = new QSerialPort(this);
+      iniPort();
     /*********************
     ** Auto Start
     **********************/
@@ -64,7 +70,120 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     }
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow()
+{
+  delete SPort;
+}
+
+
+//初始化
+void MainWindow::iniPort()
+{
+
+    QList<QSerialPortInfo>  infos = QSerialPortInfo::availablePorts();
+    if(infos.isEmpty())
+    {
+        ui.cb_port->addItem(tr("Empty"));
+        return;
+    }
+    foreach (QSerialPortInfo info, infos) {
+        ui.cb_port->addItem(info.portName());
+    }
+    //ini配置文件
+    //config();
+    //configiniRead();
+    //默认选中
+    //ui->radio_accept_hex->setChecked(true);
+    //ui->radio_send_ascii->setChecked(true);
+    //ui->check_auto_line->setChecked(true);
+    //ui->check_repsend->setChecked(true);
+    //设置只读
+    //ui->text_accept->setReadOnly(true);
+}
+void MainWindow::setcurrentPath()
+{
+    currentPath = new QDir;
+    PATH = currentPath->currentPath() + "/SerialPort.ini";
+}
+void MainWindow::getComboBoxValue()
+{
+    m_port = ui.cb_port->currentText();
+    m_baudrate = ui.cb_boadrate->currentText();
+    m_databit = ui.cb_data->currentText();
+    m_check = ui.cb_check->currentText();
+    m_stopbit = ui.cb_stop->currentText();
+
+}
+
+//设置串口参数
+void MainWindow::setPortConfig()
+{
+
+
+    //设置串口号
+    SPort->setPortName(m_port);
+    if(SPort->open(QIODevice::ReadWrite))
+    {
+        //设置波特率
+        SPort->setBaudRate(m_baudrate.toInt());
+        //设置数据位
+        switch(m_databit.toInt())
+        {
+            case 5:
+                 SPort->setDataBits(QSerialPort::Data5);break;
+            case 6:
+                 SPort->setDataBits(QSerialPort::Data6);break;
+            case 7:
+                 SPort->setDataBits(QSerialPort::Data7);break;
+            case 8:
+                 SPort->setDataBits(QSerialPort::Data8);break;
+            default: break;
+        }
+        //设置校验位
+        switch(ui.cb_check->currentIndex())
+        {
+            case 0:
+                SPort->setParity(QSerialPort::NoParity);break;
+            case 1:
+                SPort->setParity(QSerialPort::EvenParity);break;
+            case 2:
+                SPort->setParity(QSerialPort::OddParity);break;
+            case 3:
+                SPort->setParity(QSerialPort::SpaceParity);break;
+            case 4:
+                SPort->setParity(QSerialPort::MarkParity);break;
+            default: break;
+        }
+        //设置流控制
+
+        SPort->setFlowControl(QSerialPort::NoFlowControl);
+
+
+        //设置停止位
+        switch(m_stopbit.toInt())
+        {
+            case 1:
+                SPort->setStopBits(QSerialPort::OneStop);
+            case 2:
+                SPort->setStopBits(QSerialPort::TwoStop);
+            default: break;
+        }
+
+        //message("config 成功\r\n");
+    }
+    else{
+        QMessageBox::warning(this,tr("warning"),tr("initialization config failed!"));
+       // message("config 失败\r\n");
+    }
+
+
+}
+
+void MainWindow::serialSendMocapData()
+{
+  QByteArray arr = qnode.sendBuf();
+  SPort->write(arr);
+}
 
 /*****************************************************************************
 ** Implementation [Slots]
@@ -77,19 +196,24 @@ void MainWindow::showNoMasterMessage() {
     close();
 }
 
+
 /*
  * These triggers whenever the button is clicked, regardless of whether it
  * is already checked or not.
  */
 
 void MainWindow::on_button_connect_clicked(bool check ) {
-	if ( ui.checkbox_use_environment->isChecked() ) {
+  /*********************
+  ** Launch ros
+  **********************/
+  if ( ui.checkbox_use_environment->isChecked() ) { // use pc env
 		if ( !qnode.init() ) {
 			showNoMasterMessage();
 		} else {
 			ui.button_connect->setEnabled(false);
 		}
-	} else {
+  }
+  else {// user defined env
 		if ( ! qnode.init(ui.line_edit_master->text().toStdString(),
 				   ui.line_edit_host->text().toStdString()) ) {
 			showNoMasterMessage();
@@ -100,6 +224,20 @@ void MainWindow::on_button_connect_clicked(bool check ) {
 			ui.line_edit_topic->setReadOnly(true);
 		}
 	}
+
+  /*********************
+  ** Open port
+  **********************/
+  //写配置信息
+  //configiniWrite();
+
+  getComboBoxValue();
+  setPortConfig();
+  ui.cb_port->setEnabled(false);
+  ui.cb_data->setEnabled(false);
+  ui.cb_stop->setEnabled(false);
+  ui.cb_check->setEnabled(false);
+  ui.cb_boadrate->setEnabled(false);
 }
 
 

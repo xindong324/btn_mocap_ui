@@ -29,6 +29,8 @@
 #include <QSpinBox>
 #include <QPalette>
 
+
+
 #include "ui_main_window.h"
 #include "qnode.hpp"
 
@@ -54,6 +56,7 @@ public:
   void getComboBoxValue();
   void iniPort();
 
+
 	void ReadSettings(); // Load up qt program settings at startup
 	void WriteSettings(); // Save qt program settings when closing
 
@@ -73,6 +76,7 @@ public Q_SLOTS:
     *******************************************/
     void updateLoggingView(); // no idea why this can't connect automatically
     void updateLoggingView_sub(); //add
+    void serialSendMocapData();
     void pub_cmd(); //add
 
 private slots:
@@ -106,7 +110,7 @@ private:
 
   bool runonce;
   //定时器
-  QTimer * timer;
+  //QTimer * timer;
   //显示当前那时间
   QTime * currenttime;
   bool DisplayTimeStatus;
@@ -116,17 +120,11 @@ private:
   //ini路径
   QString PATH;
   QDir * currentPath;
-  //状态栏
-  QLabel* portstatus;
-  QLabel* rx;
-  QLabel* tx;
-  QLabel* byterx;
-  QLabel* bytetx;
-  QLabel* rxnum;
-  QLabel* txnum;
-
   QPalette palette;
 
+private:
+  void setPortConfig();
+  void setcurrentPath();
 };
 
 }  // namespace btn

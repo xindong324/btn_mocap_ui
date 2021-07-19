@@ -49,7 +49,7 @@ bool QNode::init() {
 	ros::NodeHandle n;
 	// Add your ros communications here.
   //chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
-  chatter_subscriber = n.subscribe("chatter", 1000, &QNode::Callback, this); //add
+  chatter_subscriber = n.subscribe("/mavros/vision_pose/pose", 100, &QNode::Callback, this);  //add
   start();
 	return true;
 }
@@ -66,7 +66,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	ros::NodeHandle n;
 	// Add your ros communications here.
   //chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
-  chatter_subscriber = n.subscribe("chatter", 1000, &QNode::Callback, this);  //add
+  chatter_subscriber = n.subscribe("/mavros/vision_pose/pose", 100, &QNode::Callback, this);  //add
   start();
 	return true;
 }
@@ -169,9 +169,57 @@ void QNode::log_sub( const LogLevel &level, const std::string &msg) {
 }
 
 //add
-void QNode::Callback(const std_msgs::StringConstPtr &submsg)
+void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-  log_sub(Info, std::string("Success sub:")+submsg->data.c_str());
+    geometry_msgs::PoseStamped submsg=*msg;
+    geometry_msgs::Quaternion quat_opti = msg->pose.orientation;
+    // convert quat 2 yaw
+    tf::Quaternion quat;
+    tf::quaternionMsgToTF(quat_opti, quat);
+
+    double roll, pitch, yaw;//定义存储r\p\y的容器
+    tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+    //cout<<"find position"<<endl;
+    //ROS_INFO("pos.x:%lf",position_opti.x); //打印接受到的字符串
+    trackPose = msg->pose;
+
+    //record and view
+    log_sub(Info, std::string("Sub Pose: x:")+std::to_string(trackPose.position.x) + std::string(" y:")
+            +std::to_string(trackPose.position.y)+std::string(" z:")+std::to_string(trackPose.position.z));
+    PoseXYZRPY2buffer();
+    Q_EMIT poseUpdated(); // used to readjust the scrollbar
+
+}
+
+void QNode::PoseXYZRPY2buffer()
+{
+  int len = 6*sizeof (double)+4;
+  send_buf.clear();
+  send_buf.resize(len);
+
+  tf::Quaternion quat;
+  trackPose.orientation.x = 1;
+  trackPose.orientation.y = 0;
+  trackPose.orientation.z = 0;
+  trackPose.orientation.w = 0;
+  tf::quaternionMsgToTF(trackPose.orientation, quat);
+
+  double roll, pitch, yaw;//定义存储r\p\y的容器
+  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+  roll = 0.44;
+  pitch = 0.27;
+  yaw = 0.62;
+
+  send_buf[0] = 0xff;
+  send_buf[1] = 0xfe;
+  memcpy(send_buf.data()+2,&(trackPose.position.x),sizeof(double));
+  memcpy(send_buf.data()+2+8,&(trackPose.position.y),sizeof(double));
+  memcpy(send_buf.data()+2+16,&(trackPose.position.z),sizeof(double));
+  memcpy(send_buf.data()+2+24,&(roll),sizeof(double));
+  memcpy(send_buf.data()+2+32,&(pitch),sizeof(double));
+  memcpy(send_buf.data()+2+40,&(yaw),sizeof(double));
+  send_buf[50] = 0x0d;
+  send_buf[51] = 0x0a;
 }
 
 //add
@@ -183,7 +231,7 @@ void QNode::sent_cmd()
     std::stringstream ss;
     ss << "clicked the button";
     msg.data = ss.str();
-    chatter_publisher.publish(msg);
+    //chatter_publisher.publish(msg);
     log(Info, std::string("I sent:"+msg.data));
     ros::spinOnce();
   }

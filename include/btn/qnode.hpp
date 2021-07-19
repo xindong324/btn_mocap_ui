@@ -25,7 +25,11 @@
 #include <QThread>
 #include <QStringListModel>
 #include <std_msgs/String.h>  //add
-
+#include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/Quaternion.h"
+#include "tf/transform_datatypes.h"//转换函数头文件
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -56,26 +60,30 @@ public:
 	         Fatal
 	 };
 
+  QByteArray sendBuf() {return send_buf;}
 	QStringListModel* loggingModel() { return &logging_model; }
 	void log( const LogLevel &level, const std::string &msg);
   QStringListModel* loggingModel_sub() { return &logging_model_sub; } //add
   void log_sub( const LogLevel &level, const std::string &msg); //add
-  void Callback(const std_msgs::StringConstPtr &submsg);  //add
+  void Callback(const geometry_msgs::PoseStamped::ConstPtr &msg);  //add
   void sent_cmd();  //add
+  void PoseXYZRPY2buffer();
 
 Q_SIGNALS:
 	void loggingUpdated();
   void rosShutdown();
   void loggingUpdated_sub();  //add
+  void poseUpdated();
 
 private:
 	int init_argc;
   const int num_log_rec = 20;
 	char** init_argv;
-	ros::Publisher chatter_publisher;
-    QStringListModel logging_model;
-    ros::Subscriber chatter_subscriber; //add
-      QStringListModel logging_model_sub; //add
+  QStringListModel logging_model;
+  ros::Subscriber chatter_subscriber; //add
+  QStringListModel logging_model_sub; //add
+  QByteArray send_buf;
+  geometry_msgs::Pose trackPose;
 };
 
 }  // namespace btn
