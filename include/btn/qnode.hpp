@@ -48,6 +48,7 @@ public:
 	bool init();
 	bool init(const std::string &master_url, const std::string &host_url);
 	void run();
+  void close();
 
 	/*********************
 	** Logging
@@ -84,6 +85,7 @@ private:
   QStringListModel logging_model_sub; //add
   QByteArray send_buf;
   geometry_msgs::Pose trackPose;
+
 };
 
 }  // namespace btn

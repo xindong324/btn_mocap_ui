@@ -90,6 +90,9 @@ private slots:
 
     void on_tb_pub_textChanged();
 
+    void SerialRead();
+    void SerialWrite();
+
 private:
 	Ui::MainWindowDesign ui;
 	QNode qnode;
@@ -127,7 +130,7 @@ private:
   QPalette palette;
 
 private:
-  void setPortConfig();
+  bool setPortConfig();
   void setcurrentPath();
 
   // config

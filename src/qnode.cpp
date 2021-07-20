@@ -92,6 +92,11 @@ void QNode::run() {
 	Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
+void QNode::close()
+{
+  ros::shutdown();
+  //Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
+}
 
 void QNode::log( const LogLevel &level, const std::string &msg) {
   if(logging_model.rowCount()>=num_log_rec)

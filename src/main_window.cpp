@@ -42,9 +42,9 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
 
     ReadSettings();
-	setWindowIcon(QIcon(":/images/icon.png"));
+  setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
-    QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
+    //QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
 
 	/*********************
 	** Logging
@@ -62,6 +62,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
       **********************/
       SPort = new QSerialPort(this);
       iniPort();
+      runonce = true;
     /*********************
     ** Auto Start
     **********************/
@@ -150,7 +151,7 @@ void MainWindow::getComboBoxValue()
 }
 
 //设置串口参数
-void MainWindow::setPortConfig()
+bool MainWindow::setPortConfig()
 {
 
 
@@ -208,9 +209,10 @@ void MainWindow::setPortConfig()
         //message("config 成功\r\n");
     }
     else{
-        QMessageBox::warning(this,tr("warning"),tr("initialization config failed!"));
-       // message("config 失败\r\n");
+        QMessageBox::warning(this,tr("warning"),tr("initialization Port failed! Maybe used by others"));
+        return false;
     }
+    return true;
 
 
 }
@@ -239,45 +241,91 @@ void MainWindow::showNoMasterMessage() {
  */
 
 void MainWindow::on_button_connect_clicked(bool check ) {
-  /*********************
-  ** Launch ros
-  **********************/
-  if ( ui.checkbox_use_environment->isChecked() ) { // use pc env
-		if ( !qnode.init() ) {
-			showNoMasterMessage();
-		} else {
-			ui.button_connect->setEnabled(false);
-		}
+
+  if(tr("Connect")==ui.button_connect->text())
+  { // click connect
+    /*********************
+    ** Open port
+    **********************/
+    //写配置信息
+    configiniPortWrite();
+
+    getComboBoxValue();
+    if(!setPortConfig())
+    { // port err
+
+    } // end port err
+    else { // port open
+      /*********************
+      ** Launch ros
+      **********************/
+      if ( ui.checkbox_use_environment->isChecked() ) { // use pc env
+        if ( !qnode.init() ) {
+          showNoMasterMessage();
+        } else {
+          //ui.button_connect->setEnabled(false);
+        }
+      }//end pc env
+      else {// user defined env
+        if ( ! qnode.init(ui.line_edit_master->text().toStdString(),
+               ui.line_edit_host->text().toStdString()) ) {
+          showNoMasterMessage();
+        } else {
+          //ui.button_connect->setEnabled(false);
+          ui.line_edit_master->setReadOnly(true);
+          ui.line_edit_host->setReadOnly(true);
+          ui.line_edit_topic->setReadOnly(true);
+        }
+      }// end user def env
+
+
+      //收到数据运行槽函数
+      if(runonce)//只允许运行一次
+      {
+         connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
+      }
+
+      ui.cb_port->setEnabled(false);
+      ui.cb_data->setEnabled(false);
+      ui.cb_stop->setEnabled(false);
+      ui.cb_check->setEnabled(false);
+      ui.cb_boadrate->setEnabled(false);
+
+      ui.send_gain->setEnabled(true);
+      ui.button_connect->setText(tr("Disconnect"));
+    }// end port open
+
+  }// end click connect
+  else
+  {
+    ui.button_connect->setText(tr("Connect"));
+    //qnode.rosShutdown();
+    runonce = false;
+    qnode.close();
+    SPort->close();
+    ui.cb_port->setEnabled(true);
+    ui.cb_data->setEnabled(true);
+    ui.cb_stop->setEnabled(true);
+    ui.cb_check->setEnabled(true);
+    ui.cb_boadrate->setEnabled(true);
+    ui.send_gain->setEnabled(false);
   }
-  else {// user defined env
-		if ( ! qnode.init(ui.line_edit_master->text().toStdString(),
-				   ui.line_edit_host->text().toStdString()) ) {
-			showNoMasterMessage();
-		} else {
-			ui.button_connect->setEnabled(false);
-			ui.line_edit_master->setReadOnly(true);
-			ui.line_edit_host->setReadOnly(true);
-			ui.line_edit_topic->setReadOnly(true);
-		}
-	}
 
-  /*********************
-  ** Open port
-  **********************/
-  //写配置信息
-  configiniPortWrite();
 
-  getComboBoxValue();
-  setPortConfig();
-  ui.cb_port->setEnabled(false);
-  ui.cb_data->setEnabled(false);
-  ui.cb_stop->setEnabled(false);
-  ui.cb_check->setEnabled(false);
-  ui.cb_boadrate->setEnabled(false);
 
-  ui.send_gain->setEnabled(true);
+
+
 }
 
+void MainWindow::SerialRead()
+{
+
+}
+
+void MainWindow::SerialWrite()
+{
+
+}
 
 //获取当前路径并创建ini对象
 void MainWindow::config()
