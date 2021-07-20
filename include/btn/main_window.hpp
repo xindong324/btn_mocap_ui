@@ -86,6 +86,10 @@ private slots:
 
     void on_cb_boadrate_currentIndexChanged(int index);
 
+    void on_send_gain_clicked();
+
+    void on_tb_pub_textChanged();
+
 private:
 	Ui::MainWindowDesign ui;
 	QNode qnode;
@@ -125,6 +129,17 @@ private:
 private:
   void setPortConfig();
   void setcurrentPath();
+
+  // config
+  void config();
+  void configiniPortRead();
+  void configiniPortWrite();
+
+  void configiniGainRead();
+  void configiniGainWrite();
+
+  void send_gain();
+
 };
 
 }  // namespace btn

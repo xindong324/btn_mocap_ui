@@ -193,33 +193,33 @@ void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 void QNode::PoseXYZRPY2buffer()
 {
-  int len = 6*sizeof (double)+4;
+  int header_len = 3;
+  int checksum_len = 2;
+  int no_payload_len = header_len + checksum_len;
+  int num_payload = 6;
+  size_t sz_per_payload = sizeof(double);
+  int len = num_payload*sz_per_payload+no_payload_len;
   send_buf.clear();
   send_buf.resize(len);
 
   tf::Quaternion quat;
-  trackPose.orientation.x = 1;
-  trackPose.orientation.y = 0;
-  trackPose.orientation.z = 0;
-  trackPose.orientation.w = 0;
   tf::quaternionMsgToTF(trackPose.orientation, quat);
 
   double roll, pitch, yaw;//定义存储r\p\y的容器
   tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
-  roll = 0.44;
-  pitch = 0.27;
-  yaw = 0.62;
+
 
   send_buf[0] = 0xff;
   send_buf[1] = 0xfe;
-  memcpy(send_buf.data()+2,&(trackPose.position.x),sizeof(double));
-  memcpy(send_buf.data()+2+8,&(trackPose.position.y),sizeof(double));
-  memcpy(send_buf.data()+2+16,&(trackPose.position.z),sizeof(double));
-  memcpy(send_buf.data()+2+24,&(roll),sizeof(double));
-  memcpy(send_buf.data()+2+32,&(pitch),sizeof(double));
-  memcpy(send_buf.data()+2+40,&(yaw),sizeof(double));
-  send_buf[50] = 0x0d;
-  send_buf[51] = 0x0a;
+  send_buf[3] = 0x00;
+  memcpy(send_buf.data()+header_len,&(trackPose.position.x),sz_per_payload);
+  memcpy(send_buf.data()+header_len+sz_per_payload,&(trackPose.position.y),sz_per_payload);
+  memcpy(send_buf.data()+header_len+2*sz_per_payload,&(trackPose.position.z),sz_per_payload);
+  memcpy(send_buf.data()+header_len+3*sz_per_payload,&(roll),sz_per_payload);
+  memcpy(send_buf.data()+header_len+4*sz_per_payload,&(pitch),sz_per_payload);
+  memcpy(send_buf.data()+header_len+5*sz_per_payload,&(yaw),sz_per_payload);
+  send_buf[len-2] = 0x0d;
+  send_buf[len-1] = 0x0a;
 }
 
 //add
