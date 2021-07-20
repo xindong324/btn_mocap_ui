@@ -98,80 +98,7 @@ void QNode::close()
   //Q_EMIT rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::log( const LogLevel &level, const std::string &msg) {
-  if(logging_model.rowCount()>=num_log_rec)
-    logging_model.removeRows(0,1);
-  logging_model.insertRows(logging_model.rowCount(),1);
-  std::stringstream logging_model_msg;
-  switch ( level ) {
-    case(Debug) : {
-        ROS_DEBUG_STREAM(msg);
-        logging_model_msg << "[DEBUG] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Info) : {
-        //ROS_INFO_STREAM(msg);
-        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Warn) : {
-        //ROS_WARN_STREAM(msg);
-        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Error) : {
-        ROS_ERROR_STREAM(msg);
-        logging_model_msg << "[ERROR] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Fatal) : {
-        ROS_FATAL_STREAM(msg);
-        logging_model_msg << "[FATAL] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-  }
-  QVariant new_row(QString(logging_model_msg.str().c_str()));
-  logging_model.setData(logging_model.index(logging_model.rowCount()-1),new_row);
-  Q_EMIT loggingUpdated(); // used to readjust the scrollbar
-}
 
-//add
-void QNode::log_sub( const LogLevel &level, const std::string &msg) {
-  if(logging_model_sub.rowCount()>=num_log_rec)
-    logging_model_sub.removeRows(0,1);
-  logging_model_sub.insertRows(logging_model_sub.rowCount(),1);
-  std::stringstream logging_model_msg;
-  switch ( level ) {
-    case(Debug) : {
-        ROS_DEBUG_STREAM(msg);
-        logging_model_msg << "[DEBUG] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Info) : {
-        //ROS_INFO_STREAM(msg);
-        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Warn) : {
-        //ROS_WARN_STREAM(msg);
-        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Error) : {
-        ROS_ERROR_STREAM(msg);
-        logging_model_msg << "[ERROR] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-    case(Fatal) : {
-        ROS_FATAL_STREAM(msg);
-        logging_model_msg << "[FATAL] [" << ros::Time::now() << "]: " << msg;
-        break;
-    }
-  }
-  QVariant new_row(QString(logging_model_msg.str().c_str()));
-  logging_model_sub.setData(logging_model_sub.index(logging_model_sub.rowCount()-1),new_row);
-  Q_EMIT loggingUpdated_sub(); // used to readjust the scrollbar
-}
 
 //add
 void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -188,16 +115,15 @@ void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     //ROS_INFO("pos.x:%lf",position_opti.x); //打印接受到的字符串
     trackPose = msg->pose;
 
-    //record and view
-    log_sub(Info, std::string("Sub Pose: x:")+std::to_string(trackPose.position.x) + std::string(" y:")
-            +std::to_string(trackPose.position.y)+std::string(" z:")+std::to_string(trackPose.position.z));
     //PoseXYZRPY2buffer();
     Q_EMIT poseUpdated(); // used to readjust the scrollbar
 
 }
 
-int QNode::PoseXYZRPY2buffer(char* buf)
+int QNode::PoseXYZRPY2buffer(char* buf,std::string &msg)
 {
+  std::stringstream ss;
+  std::string c_msg;
   int header_len = 3;
   int checksum_len = 2;
   int no_payload_len = header_len + checksum_len;
@@ -215,6 +141,7 @@ int QNode::PoseXYZRPY2buffer(char* buf)
   yaw = (double)yaw_tmp;
 
 
+
   buf[0] = 0xff;
   buf[1] = 0xfe;
   buf[2] = 0x00;
@@ -227,7 +154,10 @@ int QNode::PoseXYZRPY2buffer(char* buf)
   buf[len-2] = 0x0d;
   buf[len-1] = 0x0a;
 
-  //send_buf = QByteArray(buf,len);
+  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<trackPose.position.x<<" y:"<<trackPose.position.y<<" z:"<<trackPose.position.z<<
+      " r:"<<roll<<" p:"<<pitch<<" :y:"<<yaw;
+  msg = ss.str();
+
   return len;
 }
 

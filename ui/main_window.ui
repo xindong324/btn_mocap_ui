@@ -546,19 +546,6 @@
            </item>
            <item row="1" column="0">
             <layout class="QGridLayout" name="gridLayout_4">
-             <item row="1" column="1">
-              <widget class="QTextBrowser" name="tb_pub"/>
-             </item>
-             <item row="1" column="0">
-              <widget class="QListView" name="view_logging_sub">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>0</height>
-                </size>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="0">
               <widget class="QLabel" name="label_4">
                <property name="text">
@@ -566,12 +553,18 @@
                </property>
               </widget>
              </item>
+             <item row="1" column="1">
+              <widget class="QTextBrowser" name="tb_pub"/>
+             </item>
              <item row="0" column="1">
               <widget class="QLabel" name="label_5">
                <property name="text">
                 <string>Published</string>
                </property>
               </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QTextBrowser" name="tb_msg_rcv"/>
              </item>
             </layout>
            </item>

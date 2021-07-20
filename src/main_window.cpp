@@ -45,15 +45,20 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
   setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
     //QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
-
-	/*********************
+  ui.tb_pub->document()->setMaximumBlockCount(200);
+  ui.tb_msg_rcv->document()->setMaximumBlockCount(200); // max row of rcv msg is 200
+  /*********************
 	** Logging
 	**********************/
   //ui.view_logging->setModel(qnode.loggingModel());
-    QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
-    ui.view_logging_sub->setModel(qnode.loggingModel_sub());  //add
-      QObject::connect(&qnode, SIGNAL(loggingUpdated_sub()), this, SLOT(updateLoggingView_sub()));  //add
+    //QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
+    //ui.view_logging_sub->setModel(qnode.loggingModel_sub());  //add
+      //QObject::connect(&qnode, SIGNAL(loggingUpdated_sub()), this, SLOT(updateLoggingView_sub()));  //add
     //QObject::connect(ui.sent_cmd, SIGNAL(clicked()), this, SLOT(pub_cmd()));
+
+  /*********************
+  ** send pose
+  **********************/
       QObject::connect(&qnode,SIGNAL(poseUpdated()),this,SLOT(serialSendMocapData()));
 
 
@@ -221,9 +226,13 @@ void MainWindow::serialSendMocapData()
 {
   char buf[1000];
   int len;
-  len = qnode.PoseXYZRPY2buffer(buf);
+  std::string msg;
+  len = qnode.PoseXYZRPY2buffer(buf,msg);
   SPort->write(buf,len);
   qApp->processEvents();
+
+  QString qmsg =  QString::fromStdString(msg);
+  ui.tb_msg_rcv->append(qmsg);
 }
 
 /*****************************************************************************
@@ -501,13 +510,13 @@ void MainWindow::on_checkbox_use_environment_stateChanged(int state) {
  * this will drop the cursor down to the last line in the QListview to ensure
  * the user can always see the latest log message.
  */
-void MainWindow::updateLoggingView() {
-        //ui.view_logging->scrollToBottom();
-}
-//add
-void MainWindow::updateLoggingView_sub() {
-        ui.view_logging_sub->scrollToBottom();
-}
+//void MainWindow::updateLoggingView() {
+//        //ui.view_logging->scrollToBottom();
+//}
+////add
+//void MainWindow::updateLoggingView_sub() {
+//        ui.view_logging_sub->scrollToBottom();
+//}
 
 /*****************************************************************************
 ** Implementation [Menu]

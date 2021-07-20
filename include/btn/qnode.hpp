@@ -68,7 +68,7 @@ public:
   void log_sub( const LogLevel &level, const std::string &msg); //add
   void Callback(const geometry_msgs::PoseStamped::ConstPtr &msg);  //add
   void sent_cmd();  //add
-  int PoseXYZRPY2buffer(char* buf);
+  int PoseXYZRPY2buffer(char* buf,std::string &msg);
 
 
 Q_SIGNALS:

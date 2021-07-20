@@ -74,8 +74,8 @@ public Q_SLOTS:
     /******************************************
     ** Manual connections
     *******************************************/
-    void updateLoggingView(); // no idea why this can't connect automatically
-    void updateLoggingView_sub(); //add
+    //void updateLoggingView(); // no idea why this can't connect automatically
+    //void updateLoggingView_sub(); //add
     void serialSendMocapData();
     void pub_cmd(); //add
 
