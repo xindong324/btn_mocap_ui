@@ -219,8 +219,11 @@ bool MainWindow::setPortConfig()
 
 void MainWindow::serialSendMocapData()
 {
-  QByteArray arr = qnode.sendBuf();
-  SPort->write(arr);
+  char buf[1000];
+  int len;
+  len = qnode.PoseXYZRPY2buffer(buf);
+  SPort->write(buf,len);
+  qApp->processEvents();
 }
 
 /*****************************************************************************
@@ -282,7 +285,7 @@ void MainWindow::on_button_connect_clicked(bool check ) {
       //收到数据运行槽函数
       if(runonce)//只允许运行一次
       {
-         connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
+         //connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
       }
 
       ui.cb_port->setEnabled(false);
@@ -564,13 +567,17 @@ void MainWindow::pub_cmd()
 
 void MainWindow::send_gain()
 {
+  int header_len = 3;
+  int checksum_len = 2;
+  int no_payload_len = header_len + checksum_len;
   int num_gain = 30;
   int sz_float = sizeof(float);
-  int len = 4 + num_gain * sz_float;
-  QByteArray send_arr;
+  int len = no_payload_len + num_gain * sz_float;
+  //QByteArray send_arr;
 
   QString s_gain = QString("gain success: ");
-  send_arr.resize(len);
+  char buf[len];
+  //send_arr.resize(len);
 
   float k[30]; // 4Byte
   k[0] = ui.edt_k01->text().toFloat();
@@ -606,17 +613,20 @@ void MainWindow::send_gain()
   k[28] = ui.edt_k29->text().toFloat();
   k[29] = ui.edt_k30->text().toFloat();
 
-  send_arr[0] = 0xff;
-  send_arr[1] = 0xfe;
+  buf[0] = 0xff;
+  buf[1] = 0xfe;
+  buf[2] = 0x01;
 
   for(int i = 0; i<num_gain;i++)
   {
-    memcpy(send_arr.data()+2+i*sz_float,&(k[i]),sizeof(float));
+    memcpy(buf+header_len+i*sz_float,&(k[i]),sizeof(float));
   }
 
-  send_arr[len-2] = 0x0d;
-  send_arr[len-1] = 0x0a;
+  buf[len-2] = 0x0d;
+  buf[len-1] = 0x0a;
 
+  SPort->write(buf,len);
+  qApp->processEvents();
   ui.tb_pub->append(s_gain);
 
 }

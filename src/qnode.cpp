@@ -49,7 +49,7 @@ bool QNode::init() {
 	ros::NodeHandle n;
 	// Add your ros communications here.
   //chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
-  chatter_subscriber = n.subscribe("/mavros/vision_pose/pose", 100, &QNode::Callback, this);  //add
+  chatter_subscriber = n.subscribe("/mavros/mocap/pose", 10, &QNode::Callback, this);  //add
   start();
 	return true;
 }
@@ -66,7 +66,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	ros::NodeHandle n;
 	// Add your ros communications here.
   //chatter_publisher = n.advertise<std_msgs::String>("chatter", 1000);
-  chatter_subscriber = n.subscribe("/mavros/vision_pose/pose", 100, &QNode::Callback, this);  //add
+  chatter_subscriber = n.subscribe("/mavros/mocap/pose", 100, &QNode::Callback, this);  //add
   start();
 	return true;
 }
@@ -101,38 +101,38 @@ void QNode::close()
 void QNode::log( const LogLevel &level, const std::string &msg) {
   if(logging_model.rowCount()>=num_log_rec)
     logging_model.removeRows(0,1);
-	logging_model.insertRows(logging_model.rowCount(),1);
-	std::stringstream logging_model_msg;
-	switch ( level ) {
-		case(Debug) : {
-				ROS_DEBUG_STREAM(msg);
-				logging_model_msg << "[DEBUG] [" << ros::Time::now() << "]: " << msg;
-				break;
-		}
-		case(Info) : {
-				ROS_INFO_STREAM(msg);
-				logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-				break;
-		}
-		case(Warn) : {
-				ROS_WARN_STREAM(msg);
-				logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
-				break;
-		}
-		case(Error) : {
-				ROS_ERROR_STREAM(msg);
-				logging_model_msg << "[ERROR] [" << ros::Time::now() << "]: " << msg;
-				break;
-		}
-		case(Fatal) : {
-				ROS_FATAL_STREAM(msg);
-				logging_model_msg << "[FATAL] [" << ros::Time::now() << "]: " << msg;
-				break;
-		}
-	}
-	QVariant new_row(QString(logging_model_msg.str().c_str()));
-	logging_model.setData(logging_model.index(logging_model.rowCount()-1),new_row);
-	Q_EMIT loggingUpdated(); // used to readjust the scrollbar
+  logging_model.insertRows(logging_model.rowCount(),1);
+  std::stringstream logging_model_msg;
+  switch ( level ) {
+    case(Debug) : {
+        ROS_DEBUG_STREAM(msg);
+        logging_model_msg << "[DEBUG] [" << ros::Time::now() << "]: " << msg;
+        break;
+    }
+    case(Info) : {
+        //ROS_INFO_STREAM(msg);
+        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
+        break;
+    }
+    case(Warn) : {
+        //ROS_WARN_STREAM(msg);
+        logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
+        break;
+    }
+    case(Error) : {
+        ROS_ERROR_STREAM(msg);
+        logging_model_msg << "[ERROR] [" << ros::Time::now() << "]: " << msg;
+        break;
+    }
+    case(Fatal) : {
+        ROS_FATAL_STREAM(msg);
+        logging_model_msg << "[FATAL] [" << ros::Time::now() << "]: " << msg;
+        break;
+    }
+  }
+  QVariant new_row(QString(logging_model_msg.str().c_str()));
+  logging_model.setData(logging_model.index(logging_model.rowCount()-1),new_row);
+  Q_EMIT loggingUpdated(); // used to readjust the scrollbar
 }
 
 //add
@@ -148,12 +148,12 @@ void QNode::log_sub( const LogLevel &level, const std::string &msg) {
         break;
     }
     case(Info) : {
-        ROS_INFO_STREAM(msg);
+        //ROS_INFO_STREAM(msg);
         logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
         break;
     }
     case(Warn) : {
-        ROS_WARN_STREAM(msg);
+        //ROS_WARN_STREAM(msg);
         logging_model_msg << "[INFO] [" << ros::Time::now() << "]: " << msg;
         break;
     }
@@ -191,12 +191,12 @@ void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
     //record and view
     log_sub(Info, std::string("Sub Pose: x:")+std::to_string(trackPose.position.x) + std::string(" y:")
             +std::to_string(trackPose.position.y)+std::string(" z:")+std::to_string(trackPose.position.z));
-    PoseXYZRPY2buffer();
+    //PoseXYZRPY2buffer();
     Q_EMIT poseUpdated(); // used to readjust the scrollbar
 
 }
 
-void QNode::PoseXYZRPY2buffer()
+int QNode::PoseXYZRPY2buffer(char* buf)
 {
   int header_len = 3;
   int checksum_len = 2;
@@ -204,27 +204,31 @@ void QNode::PoseXYZRPY2buffer()
   int num_payload = 6;
   size_t sz_per_payload = sizeof(double);
   int len = num_payload*sz_per_payload+no_payload_len;
-  send_buf.clear();
-  send_buf.resize(len);
 
   tf::Quaternion quat;
   tf::quaternionMsgToTF(trackPose.orientation, quat);
 
-  double roll, pitch, yaw;//定义存储r\p\y的容器
-  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+  double roll, pitch, yaw,roll_tmp,pitch_tmp,yaw_tmp;//定义存储r\p\y的容器
+  tf::Matrix3x3(quat).getRPY(roll_tmp, pitch_tmp, yaw_tmp);//进行转换
+  roll = (double)roll_tmp;
+  pitch = (double)pitch_tmp;
+  yaw = (double)yaw_tmp;
 
 
-  send_buf[0] = 0xff;
-  send_buf[1] = 0xfe;
-  send_buf[3] = 0x00;
-  memcpy(send_buf.data()+header_len,&(trackPose.position.x),sz_per_payload);
-  memcpy(send_buf.data()+header_len+sz_per_payload,&(trackPose.position.y),sz_per_payload);
-  memcpy(send_buf.data()+header_len+2*sz_per_payload,&(trackPose.position.z),sz_per_payload);
-  memcpy(send_buf.data()+header_len+3*sz_per_payload,&(roll),sz_per_payload);
-  memcpy(send_buf.data()+header_len+4*sz_per_payload,&(pitch),sz_per_payload);
-  memcpy(send_buf.data()+header_len+5*sz_per_payload,&(yaw),sz_per_payload);
-  send_buf[len-2] = 0x0d;
-  send_buf[len-1] = 0x0a;
+  buf[0] = 0xff;
+  buf[1] = 0xfe;
+  buf[2] = 0x00;
+  memcpy(buf+header_len,&(trackPose.position.x),sz_per_payload);
+  memcpy(buf+header_len+sz_per_payload,&(trackPose.position.y),sz_per_payload);
+  memcpy(buf+header_len+2*sz_per_payload,&(trackPose.position.z),sz_per_payload);
+  memcpy(buf+header_len+3*sz_per_payload,&(roll),sz_per_payload);
+  memcpy(buf+header_len+4*sz_per_payload,&(pitch),sz_per_payload);
+  memcpy(buf+header_len+5*sz_per_payload,&(yaw),sz_per_payload);
+  buf[len-2] = 0x0d;
+  buf[len-1] = 0x0a;
+
+  //send_buf = QByteArray(buf,len);
+  return len;
 }
 
 //add
@@ -237,7 +241,7 @@ void QNode::sent_cmd()
     ss << "clicked the button";
     msg.data = ss.str();
     //chatter_publisher.publish(msg);
-    log(Info, std::string("I sent:"+msg.data));
+    //log(Info, std::string("I sent:"+msg.data));
     ros::spinOnce();
   }
 }
