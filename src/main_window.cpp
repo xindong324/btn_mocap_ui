@@ -138,6 +138,7 @@ void MainWindow::iniPort()
     configiniGainRead();
     //默认选中
     ui.send_gain->setEnabled(false);
+    ui.btn_stopuav->setEnabled(false);
 
 }
 void MainWindow::setcurrentPath()
@@ -222,18 +223,7 @@ bool MainWindow::setPortConfig()
 
 }
 
-void MainWindow::serialSendMocapData()
-{
-  char buf[1000];
-  int len;
-  std::string msg;
-  len = qnode.PoseXYZRPY2buffer(buf,msg);
-  SPort->write(buf,len);
-  qApp->processEvents();
 
-  QString qmsg =  QString::fromStdString(msg);
-  ui.tb_msg_rcv->append(qmsg);
-}
 
 /*****************************************************************************
 ** Implementation [Slots]
@@ -294,7 +284,7 @@ void MainWindow::on_button_connect_clicked(bool check ) {
       //收到数据运行槽函数
       if(runonce)//只允许运行一次
       {
-         //connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
+         connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
       }
 
       ui.cb_port->setEnabled(false);
@@ -304,12 +294,15 @@ void MainWindow::on_button_connect_clicked(bool check ) {
       ui.cb_boadrate->setEnabled(false);
 
       ui.send_gain->setEnabled(true);
+      ui.btn_stopuav->setEnabled(true);
+
+      ui.quit_button->setEnabled(false);
       ui.button_connect->setText(tr("Disconnect"));
     }// end port open
 
   }// end click connect
   else
-  {
+  {// disconnect clicked
     ui.button_connect->setText(tr("Connect"));
     //qnode.rosShutdown();
     runonce = false;
@@ -321,11 +314,10 @@ void MainWindow::on_button_connect_clicked(bool check ) {
     ui.cb_check->setEnabled(true);
     ui.cb_boadrate->setEnabled(true);
     ui.send_gain->setEnabled(false);
+    ui.btn_stopuav->setEnabled(false);
+
+    ui.quit_button->setEnabled(true);
   }
-
-
-
-
 
 }
 
@@ -533,7 +525,7 @@ void MainWindow::on_actionAbout_triggered() {
 void MainWindow::ReadSettings() {
     QSettings settings("Qt-Ros Package", "btn");
     restoreGeometry(settings.value("geometry").toByteArray());
-    restoreState(settings.value("windowState").toByteArray());
+    //restoreState(settings.value("windowState").toByteArray());
     QString master_url = settings.value("master_url",QString("http://192.168.1.2:11311/")).toString();
     QString host_url = settings.value("host_url", QString("192.168.1.3")).toString();
     //QString topic_name = settings.value("topic_name", QString("/chatter")).toString();
@@ -572,6 +564,27 @@ void MainWindow::closeEvent(QCloseEvent *event)
 void MainWindow::pub_cmd()
 {
   qnode.sent_cmd();
+}
+
+
+/*****************************************************************************
+** Implementation [Send Data]
+*****************************************************************************/
+void MainWindow::serialSendMocapData()
+{
+  char buf[1000];
+  int len;
+  std::string msg;
+  len = qnode.PoseXYZRPY2buffer(buf,msg);
+  if(ui.ck_sendmocap->isChecked()==true)
+  {
+    SPort->write(buf,len);
+    qApp->processEvents();
+
+    QString qmsg =  QString::fromStdString(msg);
+    ui.tb_msg_rcv->append(qmsg);
+  }
+
 }
 
 void MainWindow::send_gain()
@@ -640,6 +653,27 @@ void MainWindow::send_gain()
 
 }
 
+int MainWindow::send_stop(char *buf,std::string &msg)
+{
+  int header_len = 3;
+  int checksum_len = 2;
+  int no_payload_len = header_len + checksum_len;
+  int num_payload = 1;
+  int sz_per_payload = 1; // char
+  int len = no_payload_len + num_payload * sz_per_payload;
+
+  char msg_id = 0x02;
+
+  buf[0] = 0xff;
+  buf[1] = 0xfe;
+  buf[2] = msg_id;
+  buf[3] = 0x01;
+  buf[len-2] = 0x0d;
+  buf[len-1] = 0x0a;
+  msg = "Uav Stop Send";
+  return len;
+}
+
 
 }  // namespace btn
 
@@ -673,4 +707,23 @@ void btn::MainWindow::on_send_gain_clicked()
 void btn::MainWindow::on_tb_pub_textChanged()
 {
     ui.tb_pub->moveCursor(QTextCursor::End);
+}
+
+void btn::MainWindow::on_btn_stopuav_clicked()
+{
+  std::string msg;
+  char buf[128];
+
+  int len = send_stop(buf,msg);
+  SPort->write(buf,len);
+  qApp->processEvents();
+
+  QString qmsg =  QString::fromStdString(msg);
+  ui.tb_pub->append(qmsg);
+
+}
+
+void btn::MainWindow::on_ck_sendmocap_stateChanged(int arg1)
+{
+
 }

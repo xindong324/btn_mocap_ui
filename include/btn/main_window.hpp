@@ -93,6 +93,10 @@ private slots:
     void SerialRead();
     void SerialWrite();
 
+    void on_btn_stopuav_clicked();
+
+    void on_ck_sendmocap_stateChanged(int arg1);
+
 private:
 	Ui::MainWindowDesign ui;
 	QNode qnode;
@@ -141,7 +145,10 @@ private:
   void configiniGainRead();
   void configiniGainWrite();
 
+
+  // send data to uav
   void send_gain();
+  int send_stop(char *buf,std::string &msg);
 
 };
 

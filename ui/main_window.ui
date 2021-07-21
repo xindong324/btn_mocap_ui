@@ -610,7 +610,7 @@
    <property name="minimumSize">
     <size>
      <width>325</width>
-     <height>666</height>
+     <height>675</height>
     </size>
    </property>
    <property name="floating">
@@ -648,6 +648,19 @@
            <string>Ros Master</string>
           </property>
           <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <property name="text">
+              <string>Ros Master Url</string>
+             </property>
+            </widget>
+           </item>
            <item row="6" column="0" colspan="2">
             <widget class="QCheckBox" name="checkbox_use_environment">
              <property name="layoutDirection">
@@ -658,30 +671,40 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QLineEdit" name="line_edit_master">
+           <item row="5" column="0" colspan="2">
+            <widget class="QLineEdit" name="line_edit_topic">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
-              <string>http://192.168.1.2:11311/</string>
+              <string>unused</string>
              </property>
             </widget>
-           </item>
-           <item row="8" column="0">
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>170</width>
-               <height>21</height>
-              </size>
-             </property>
-            </spacer>
            </item>
            <item row="3" column="0" colspan="2">
             <widget class="QLineEdit" name="line_edit_host">
              <property name="text">
               <string>192.168.1.67</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <property name="text">
+              <string>Ros IP</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QLineEdit" name="line_edit_master">
+             <property name="text">
+              <string>http://192.168.1.2:11311/</string>
              </property>
             </widget>
            </item>
@@ -720,19 +743,6 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <property name="text">
-              <string>Ros IP</string>
-             </property>
-            </widget>
-           </item>
            <item row="7" column="0" colspan="2">
             <widget class="QCheckBox" name="checkbox_remember_settings">
              <property name="layoutDirection">
@@ -743,26 +753,13 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label">
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
+           <item row="8" column="0">
+            <widget class="QCheckBox" name="ck_sendmocap">
              <property name="text">
-              <string>Ros Master Url</string>
+              <string>SendMocap</string>
              </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="2">
-            <widget class="QLineEdit" name="line_edit_topic">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>unused</string>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -776,6 +773,9 @@
             <width>0</width>
             <height>100</height>
            </size>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::PreventContextMenu</enum>
           </property>
           <property name="text">
            <string>Stop UAV</string>
