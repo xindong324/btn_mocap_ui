@@ -303,11 +303,13 @@ void MainWindow::on_button_connect_clicked(bool check ) {
   }// end click connect
   else
   {// disconnect clicked
+    std::cout<<"bf"<<std::endl;
     ui.button_connect->setText(tr("Connect"));
     //qnode.rosShutdown();
     runonce = false;
     qnode.close();
     SPort->close();
+    std::cout<<"aft"<<std::endl;
     ui.cb_port->setEnabled(true);
     ui.cb_data->setEnabled(true);
     ui.cb_stop->setEnabled(true);
