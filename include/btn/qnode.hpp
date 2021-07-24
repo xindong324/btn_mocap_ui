@@ -70,6 +70,7 @@ public:
   void sent_cmd();  //add
   int PoseXYZRPY2buffer(uint8_t* buf,std::string &msg);
   int PoseXYZRPY2bufferMavlink(uint8_t* buf, std::string &msg);
+  void log_info(std::string &msg);
 
 
 Q_SIGNALS:

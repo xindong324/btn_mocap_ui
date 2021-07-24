@@ -161,8 +161,9 @@ int QNode::PoseXYZRPY2buffer(uint8_t* buf,std::string &msg)
   buf[len-2] = 0x0d;
   buf[len-1] = 0x0a;
 
-  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<trackPose.position.x<<" y:"<<trackPose.position.y<<" z:"<<trackPose.position.z<<
-      " r:"<<roll<<" p:"<<pitch<<" :y:"<<yaw;
+  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<mocap_pos_send.x<<" y:"<<mocap_pos_send.y<<" z:"<<mocap_pos_send.z<<
+      " r:"<<mocap_pos_send.roll<<" p:"<<mocap_pos_send.pitch<<" :y:"<<mocap_pos_send.yaw;
+  ROS_INFO_STREAM(ss.str());
   msg = ss.str();
 
   return len;
@@ -189,8 +190,9 @@ int QNode::PoseXYZRPY2bufferMavlink(uint8_t* buf, std::string &msg)
   mavlink_msg_vicon_position_estimate_encode(9,201,&mav_msg,&mocap_pos_send);
   int len = mavlink_msg_to_send_buffer(buf, &mav_msg);
 
-  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<trackPose.position.x<<" y:"<<trackPose.position.y<<" z:"<<trackPose.position.z<<
-      " r:"<<roll<<" p:"<<pitch<<" :y:"<<yaw;
+  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<mocap_pos_send.x<<" y:"<<mocap_pos_send.y<<" z:"<<mocap_pos_send.z<<
+      " r:"<<mocap_pos_send.roll<<" p:"<<mocap_pos_send.pitch<<" :y:"<<mocap_pos_send.yaw;
+  ROS_INFO_STREAM(ss.str());
   msg = ss.str();
   return len;
 }
@@ -208,6 +210,11 @@ void QNode::sent_cmd()
     //log(Info, std::string("I sent:"+msg.data));
     ros::spinOnce();
   }
+}
+
+void QNode::log_info(std::string &msg)
+{
+  ROS_INFO_STREAM(msg);
 }
 
 }  // namespace btn

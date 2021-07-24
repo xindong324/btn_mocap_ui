@@ -774,6 +774,8 @@ void btn::MainWindow::on_send_gain_clicked()
     len = send_gain(buf,msg);
   }
 
+  qnode.log_info(msg);
+
   SPort->write(reinterpret_cast<char*>(buf),len);
   qApp->processEvents();
   QString qmsg =  QString::fromStdString(msg);
@@ -800,6 +802,8 @@ void btn::MainWindow::on_btn_stopuav_clicked()
   {
     len = send_stop(buf,msg);
   }
+
+  qnode.log_info(msg);
 
   SPort->write(reinterpret_cast<char*>(buf),len);
   qApp->processEvents();
