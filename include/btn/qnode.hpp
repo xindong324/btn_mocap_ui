@@ -30,6 +30,8 @@
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
 #include "tf/transform_datatypes.h"//转换函数头文件
+// mavlink
+#include "inc2/common/mavlink.h"
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -66,7 +68,8 @@ public:
   QStringListModel* loggingModel_sub() { return &logging_model_sub; } //add
   void Callback(const geometry_msgs::PoseStamped::ConstPtr &msg);  //add
   void sent_cmd();  //add
-  int PoseXYZRPY2buffer(char* buf,std::string &msg);
+  int PoseXYZRPY2buffer(uint8_t* buf,std::string &msg);
+  int PoseXYZRPY2bufferMavlink(uint8_t* buf, std::string &msg);
 
 
 Q_SIGNALS:
@@ -84,7 +87,8 @@ private:
   QStringListModel logging_model_sub; //add
   //QByteArray send_buf;
   geometry_msgs::Pose trackPose;
-
+  mavlink_vicon_position_estimate_t mocap_pos_send;
+  mavlink_message_t mav_msg;
 };
 
 }  // namespace btn

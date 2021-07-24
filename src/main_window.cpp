@@ -276,7 +276,6 @@ void MainWindow::on_button_connect_clicked(bool check ) {
           //ui.button_connect->setEnabled(false);
           ui.line_edit_master->setReadOnly(true);
           ui.line_edit_host->setReadOnly(true);
-          ui.line_edit_topic->setReadOnly(true);
         }
       }// end user def env
 
@@ -574,13 +573,22 @@ void MainWindow::pub_cmd()
 *****************************************************************************/
 void MainWindow::serialSendMocapData()
 {
-  char buf[1000];
+  uint8_t buf[1000];
   int len;
   std::string msg;
-  len = qnode.PoseXYZRPY2buffer(buf,msg);
+
   if(ui.ck_sendmocap->isChecked()==true)
   {
-    SPort->write(buf,len);
+
+    if(ui.ck_mavlink->isChecked() == true)
+    {
+      len = qnode.PoseXYZRPY2bufferMavlink(buf,msg);
+    }
+    else
+    {
+      len = qnode.PoseXYZRPY2buffer(buf,msg);
+    }
+    SPort->write(reinterpret_cast<char*>(buf),len);
     qApp->processEvents();
 
     QString qmsg =  QString::fromStdString(msg);
@@ -589,7 +597,7 @@ void MainWindow::serialSendMocapData()
 
 }
 
-void MainWindow::send_gain()
+int MainWindow::send_gain(uint8_t *buf,std::string &msg)
 {
   int header_len = 3;
   int checksum_len = 2;
@@ -599,8 +607,7 @@ void MainWindow::send_gain()
   int len = no_payload_len + num_gain * sz_float;
   //QByteArray send_arr;
 
-  QString s_gain = QString("gain success: ");
-  char buf[len];
+  msg = "gain success";
   //send_arr.resize(len);
 
   float k[30]; // 4Byte
@@ -649,13 +656,58 @@ void MainWindow::send_gain()
   buf[len-2] = 0x0d;
   buf[len-1] = 0x0a;
 
-  SPort->write(buf,len);
-  qApp->processEvents();
-  ui.tb_pub->append(s_gain);
+  return len;
 
 }
 
-int MainWindow::send_stop(char *buf,std::string &msg)
+int MainWindow::send_gain_mavlink(uint8_t *buf,std::string &msg)
+{
+  msg = "gain success mavlink";
+  //send_arr.resize(len);
+
+  mavlink_mav_set_gain_t mav_gain;
+
+  mav_gain.gain_num = 30;
+
+   // 4Byte
+  mav_gain.gain[0] = ui.edt_k01->text().toFloat();
+  mav_gain.gain[1] = ui.edt_k02->text().toFloat();
+  mav_gain.gain[2] = ui.edt_k03->text().toFloat();
+  mav_gain.gain[3] = ui.edt_k04->text().toFloat();
+  mav_gain.gain[4] = ui.edt_k05->text().toFloat();
+  mav_gain.gain[5] = ui.edt_k06->text().toFloat();
+  mav_gain.gain[6] = ui.edt_k07->text().toFloat();
+  mav_gain.gain[7] = ui.edt_k08->text().toFloat();
+  mav_gain.gain[8] = ui.edt_k09->text().toFloat();
+  mav_gain.gain[9] = ui.edt_k10->text().toFloat();
+
+  mav_gain.gain[10] = ui.edt_k11->text().toFloat();
+  mav_gain.gain[11] = ui.edt_k12->text().toFloat();
+  mav_gain.gain[12] = ui.edt_k13->text().toFloat();
+  mav_gain.gain[13] = ui.edt_k14->text().toFloat();
+  mav_gain.gain[14] = ui.edt_k15->text().toFloat();
+  mav_gain.gain[15] = ui.edt_k16->text().toFloat();
+  mav_gain.gain[16] = ui.edt_k17->text().toFloat();
+  mav_gain.gain[17] = ui.edt_k18->text().toFloat();
+  mav_gain.gain[18] = ui.edt_k19->text().toFloat();
+  mav_gain.gain[19] = ui.edt_k20->text().toFloat();
+
+  mav_gain.gain[20] = ui.edt_k21->text().toFloat();
+  mav_gain.gain[21] = ui.edt_k22->text().toFloat();
+  mav_gain.gain[22] = ui.edt_k23->text().toFloat();
+  mav_gain.gain[23] = ui.edt_k24->text().toFloat();
+  mav_gain.gain[24] = ui.edt_k25->text().toFloat();
+  mav_gain.gain[25] = ui.edt_k26->text().toFloat();
+  mav_gain.gain[26] = ui.edt_k27->text().toFloat();
+  mav_gain.gain[27] = ui.edt_k28->text().toFloat();
+  mav_gain.gain[28] = ui.edt_k29->text().toFloat();
+  mav_gain.gain[29] = ui.edt_k30->text().toFloat();
+
+  mavlink_msg_mav_set_gain_encode(sys_id,comp_id,&mav_msg_ui,&mav_gain);
+  return mavlink_msg_to_send_buffer(buf,&mav_msg_ui);
+}
+
+int MainWindow::send_stop(uint8_t *buf,std::string &msg)
 {
   int header_len = 3;
   int checksum_len = 2;
@@ -664,7 +716,9 @@ int MainWindow::send_stop(char *buf,std::string &msg)
   int sz_per_payload = 1; // char
   int len = no_payload_len + num_payload * sz_per_payload;
 
-  char msg_id = 0x02;
+  uint8_t msg_id = 0x02;
+
+  msg = "stop uav";
 
   buf[0] = 0xff;
   buf[1] = 0xfe;
@@ -676,18 +730,23 @@ int MainWindow::send_stop(char *buf,std::string &msg)
   return len;
 }
 
+int MainWindow::send_stop_mavlink(uint8_t *buf,std::string &msg)
+{
+//mavlink set base mode to auto disarm
+  msg = "stop uav mavlink";
+  mavlink_set_mode_t set_mode;
+  set_mode.target_system = 0x01;
+  set_mode.base_mode =MAV_MODE_AUTO_DISARMED; // atuo mission disarmed force to land
+  set_mode.custom_mode = 0;
+  mavlink_msg_set_mode_encode(sys_id,comp_id,&mav_msg_ui,&set_mode);
+  return mavlink_msg_to_send_buffer(buf,&mav_msg_ui);
+
+}
+
 
 }  // namespace btn
 
 
-void btn::MainWindow::on_btn_choosefile_clicked()
-{
-  ui.edt_filepath->setReadOnly(false);
-  gain_file_name = QFileDialog::getOpenFileName(this,tr("文件"),"",tr("text(*.txt)"));
-  is_file_name_set = true;
-  ui.edt_filepath->setText(gain_file_name);
-  ui.edt_filepath->setReadOnly(true); // set read only
-}
 
 void btn::MainWindow::on_btn_loadparam_clicked()
 {
@@ -701,9 +760,24 @@ void btn::MainWindow::on_cb_boadrate_currentIndexChanged(int index)
 
 void btn::MainWindow::on_send_gain_clicked()
 {
-
+  uint8_t buf[256];
+  std::string msg;
   configiniGainWrite();
-  send_gain();
+  int len;
+
+  if(ui.ck_mavlink->isChecked())
+  {
+    len = send_gain_mavlink(buf,msg);
+  }
+  else
+  {
+    len = send_gain(buf,msg);
+  }
+
+  SPort->write(reinterpret_cast<char*>(buf),len);
+  qApp->processEvents();
+  QString qmsg =  QString::fromStdString(msg);
+  ui.tb_pub->append(qmsg);
 }
 
 void btn::MainWindow::on_tb_pub_textChanged()
@@ -714,10 +788,20 @@ void btn::MainWindow::on_tb_pub_textChanged()
 void btn::MainWindow::on_btn_stopuav_clicked()
 {
   std::string msg;
-  char buf[128];
+  uint8_t buf[128];
 
-  int len = send_stop(buf,msg);
-  SPort->write(buf,len);
+  int len;
+
+  if(ui.ck_mavlink->isChecked())
+  {
+    len = send_stop_mavlink(buf,msg);
+  }
+  else
+  {
+    len = send_stop(buf,msg);
+  }
+
+  SPort->write(reinterpret_cast<char*>(buf),len);
   qApp->processEvents();
 
   QString qmsg =  QString::fromStdString(msg);

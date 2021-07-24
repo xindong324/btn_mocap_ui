@@ -17,6 +17,10 @@
 #include <sstream>
 #include "../include/btn/qnode.hpp"
 
+#include "../include/btn/inc2/mavlink_helpers.h"
+#include "../include/btn/inc2/common/mavlink.h"
+
+
 /*****************************************************************************
 ** Namespaces
 *****************************************************************************/
@@ -120,7 +124,7 @@ void QNode::Callback(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
 }
 
-int QNode::PoseXYZRPY2buffer(char* buf,std::string &msg)
+int QNode::PoseXYZRPY2buffer(uint8_t* buf,std::string &msg)
 {//24+5
   std::stringstream ss;
   std::string c_msg;
@@ -129,7 +133,7 @@ int QNode::PoseXYZRPY2buffer(char* buf,std::string &msg)
   int no_payload_len = header_len + checksum_len;
   int num_payload = 6;
   size_t sz_per_payload = sizeof(float);
-  int len = num_payload*sz_per_payload+no_payload_len;
+  int len = num_payload*static_cast<int>(sz_per_payload)+no_payload_len;
 
   tf::Quaternion quat;
   tf::quaternionMsgToTF(trackPose.orientation, quat);
@@ -138,12 +142,12 @@ int QNode::PoseXYZRPY2buffer(char* buf,std::string &msg)
   float x,y,z,roll, pitch, yaw;//定义存储r\p\y的容器
   tf::Matrix3x3(quat).getRPY(roll_tmp, pitch_tmp, yaw_tmp);//进行转换
 
-  x = (float)trackPose.position.x;
-  y = (float)trackPose.position.y;
-  z = (float)trackPose.position.z;
-  roll = (float)roll_tmp;
-  pitch = (float)pitch_tmp;
-  yaw = (float)yaw_tmp;
+  x = static_cast<float>(trackPose.position.x);
+  y = static_cast<float>(trackPose.position.y);
+  z = static_cast<float>(trackPose.position.z);
+  roll = static_cast<float>(roll_tmp);
+  pitch = static_cast<float>(pitch_tmp);
+  yaw = static_cast<float>(yaw_tmp);
 
   buf[0] = 0xff;
   buf[1] = 0xfe;
@@ -161,6 +165,33 @@ int QNode::PoseXYZRPY2buffer(char* buf,std::string &msg)
       " r:"<<roll<<" p:"<<pitch<<" :y:"<<yaw;
   msg = ss.str();
 
+  return len;
+}
+
+int QNode::PoseXYZRPY2bufferMavlink(uint8_t* buf, std::string &msg)
+{
+  std::stringstream ss;
+  std::string c_msg;
+
+  tf::Quaternion quat;
+  tf::quaternionMsgToTF(trackPose.orientation, quat);
+  double roll, pitch, yaw;//定义存储r\p\y的容器
+  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);//进行转换
+
+  mocap_pos_send.x = static_cast<float>(trackPose.position.x);
+  mocap_pos_send.y = static_cast<float>(trackPose.position.y);
+  mocap_pos_send.z = static_cast<float>(trackPose.position.z);
+
+
+  mocap_pos_send.roll = static_cast<float>(roll);
+  mocap_pos_send.pitch = static_cast<float>(pitch);
+  mocap_pos_send.yaw =  static_cast<float>(yaw);
+  mavlink_msg_vicon_position_estimate_encode(9,201,&mav_msg,&mocap_pos_send);
+  int len = mavlink_msg_to_send_buffer(buf, &mav_msg);
+
+  ss<<"[Info] [" << ros::Time::now() << "]: pos x:"<<trackPose.position.x<<" y:"<<trackPose.position.y<<" z:"<<trackPose.position.z<<
+      " r:"<<roll<<" p:"<<pitch<<" :y:"<<yaw;
+  msg = ss.str();
   return len;
 }
 

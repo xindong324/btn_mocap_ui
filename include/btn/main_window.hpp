@@ -29,7 +29,8 @@
 #include <QSpinBox>
 #include <QPalette>
 
-
+// mavlink
+#include "inc2/common/mavlink.h"
 
 #include "ui_main_window.h"
 #include "qnode.hpp"
@@ -80,7 +81,6 @@ public Q_SLOTS:
     void pub_cmd(); //add
 
 private slots:
-    void on_btn_choosefile_clicked();
 
     void on_btn_loadparam_clicked();
 
@@ -112,6 +112,10 @@ private:
 
   QString gain_file_name;
   bool is_file_name_set=false;
+
+  mavlink_message_t mav_msg_ui;
+  const uint8_t sys_id = 9;
+  const uint8_t comp_id = 201;
 
 
   //ini类
@@ -147,8 +151,10 @@ private:
 
 
   // send data to uav
-  void send_gain();
-  int send_stop(char *buf,std::string &msg);
+  int send_gain(uint8_t *buf,std::string &msg);
+  int send_stop(uint8_t *buf,std::string &msg);
+  int send_gain_mavlink(uint8_t *buf,std::string &msg);
+  int send_stop_mavlink(uint8_t *buf,std::string &msg);
 
 };
 
