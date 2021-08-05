@@ -68,8 +68,8 @@ public:
   QStringListModel* loggingModel_sub() { return &logging_model_sub; } //add
   void Callback(const geometry_msgs::PoseStamped::ConstPtr &msg);  //add
   void sent_cmd();  //add
-  int PoseXYZRPY2buffer(uint8_t* buf,std::string &msg);
-  int PoseXYZRPY2bufferMavlink(uint8_t* buf, std::string &msg);
+  int PoseXYZRPY2buffer(uint8_t* buf, float* pose);
+  int PoseXYZRPY2bufferMavlink(uint8_t* buf, float* pose);
   void log_info(std::string &msg);
 
 

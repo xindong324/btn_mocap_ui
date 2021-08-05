@@ -46,7 +46,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
     //QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
   ui.tb_pub->document()->setMaximumBlockCount(200);
-  ui.tb_msg_rcv->document()->setMaximumBlockCount(200); // max row of rcv msg is 200
+  //ui.tb_msg_rcv->document()->setMaximumBlockCount(200); // max row of rcv msg is 200
   /*********************
 	** Logging
 	**********************/
@@ -571,11 +571,17 @@ void MainWindow::pub_cmd()
 /*****************************************************************************
 ** Implementation [Send Data]
 *****************************************************************************/
+
+/************************************************
+ * ** float 转 qstring 保留制定有效数字
+ *     QString str = QString::number(f, ‘f’, 6);
+ *    QString str = QString("%1").arg(f, 0, ‘f’, 6);
+ * ********************************************/
 void MainWindow::serialSendMocapData()
 {
   uint8_t buf[1000];
   int len;
-  std::string msg;
+  float msg[6];
 
   if(ui.ck_sendmocap->isChecked()==true)
   {
@@ -591,8 +597,14 @@ void MainWindow::serialSendMocapData()
     SPort->write(reinterpret_cast<char*>(buf),len);
     qApp->processEvents();
 
-    QString qmsg =  QString::fromStdString(msg);
-    ui.tb_msg_rcv->append(qmsg);
+    ui.edt_x->setText(QString("%1").arg(msg[0]));
+    ui.edt_y->setText(QString("%1").arg(msg[1]));
+    ui.edt_z->setText(QString("%1").arg(msg[2]));
+
+    ui.edt_roll->setText(QString("%1").arg(msg[3]));
+    ui.edt_pitch->setText(QString("%1").arg(msg[4]));
+    ui.edt_yaw->setText(QString("%1").arg(msg[5]));
+    //ui.tb_msg_rcv->append(qmsg);
   }
 
 }

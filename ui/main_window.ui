@@ -550,7 +550,68 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QTextBrowser" name="tb_msg_rcv"/>
+              <layout class="QGridLayout" name="gridLayout_5">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_42">
+                 <property name="text">
+                  <string>x</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_43">
+                 <property name="text">
+                  <string>y</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="edt_y"/>
+               </item>
+               <item row="2" column="2">
+                <widget class="QLabel" name="label_47">
+                 <property name="text">
+                  <string>yaw</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QLabel" name="label_45">
+                 <property name="text">
+                  <string>roll</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QLabel" name="label_46">
+                 <property name="text">
+                  <string>pitch</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="edt_x"/>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLineEdit" name="edt_roll"/>
+               </item>
+               <item row="1" column="3">
+                <widget class="QLineEdit" name="edt_pitch"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_44">
+                 <property name="text">
+                  <string>z</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="edt_z"/>
+               </item>
+               <item row="2" column="3">
+                <widget class="QLineEdit" name="edt_yaw"/>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
