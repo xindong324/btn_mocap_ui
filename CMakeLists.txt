@@ -31,8 +31,8 @@ catkin_package()
 # this comes from qt_build's qt-ros.cmake which is automatically 
 # included via the dependency call in package.xml
 #rosbuild_prepare_qt4(QtCore QtGui QTSerialPort) # Add the appropriate components to the component list here
-find_package(Qt5 REQUIRED Core Widgets SerialPort)
-set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort)
+find_package(Qt5 REQUIRED Core Widgets SerialPort Charts)
+set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort Qt5::Charts)
 ##############################################################################
 # Sections
 ##############################################################################

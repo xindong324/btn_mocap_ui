@@ -79,38 +79,38 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     /*********************
     ** set text editor
     **********************/
-    ui.edt_k01->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k02->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k03->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k04->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k05->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k06->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k07->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k08->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k09->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k10->setValidator(new QDoubleValidator(0.0,180.0,4,this));
+    ui.edt_k01->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k02->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k03->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k04->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k05->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k06->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k07->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k08->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k09->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k10->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
 
-    ui.edt_k11->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k12->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k13->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k14->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k15->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k16->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k17->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k18->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k19->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k20->setValidator(new QDoubleValidator(0.0,180.0,4,this));
+    ui.edt_k11->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k12->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k13->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k14->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k15->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k16->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k17->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k18->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k19->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k20->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
 
-    ui.edt_k21->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k22->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k23->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k24->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k25->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k26->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k27->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k28->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k29->setValidator(new QDoubleValidator(0.0,180.0,4,this));
-    ui.edt_k30->setValidator(new QDoubleValidator(0.0,180.0,4,this));
+    ui.edt_k21->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k22->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k23->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k24->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k25->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k26->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k27->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k28->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k29->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+    ui.edt_k30->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
 }
 
 MainWindow::~MainWindow()
