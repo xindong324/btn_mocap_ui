@@ -28,4 +28,4 @@ port->readAll();
 find_package(Qt5 REQUIRED Core Widgets SerialPort Charts)
 set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort Qt5::Charts)
 
-##Qt tcp client
+## Qt tcp client
