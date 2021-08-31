@@ -16,8 +16,6 @@
 #include <QMainWindow>
 #include <QTranslator>
 #include <string>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
 #include <QTimer>//不是QTime
 #include <QTime>
 #include <QTextCodec>
@@ -28,6 +26,10 @@
 #include <QDir>
 #include <QSpinBox>
 #include <QPalette>
+
+//tcp
+#include <QTcpSocket>
+#include <QtNetwork>
 
 // mavlink
 #include "inc2/common/mavlink.h"
@@ -40,6 +42,8 @@
 *****************************************************************************/
 
 namespace btn {
+// use qcharts namespace
+//QT_CHARTS_USE_NAMESPACE
 
 /*****************************************************************************
 ** Interface [MainWindow]
@@ -54,12 +58,11 @@ public:
 	MainWindow(int argc, char** argv, QWidget *parent = 0);
 	~MainWindow();
 
-  void getComboBoxValue();
-  void iniPort();
+  void getWifiLineEditValue();
+  void iniWifi();
 
-
-	void ReadSettings(); // Load up qt program settings at startup
-	void WriteSettings(); // Save qt program settings when closing
+  void ReadSettings(); // Load up qt program settings at startup
+  void WriteSettings(); // Save qt program settings when closing
 
 	void closeEvent(QCloseEvent *event); // Overloaded function
 	void showNoMasterMessage();
@@ -77,7 +80,7 @@ public Q_SLOTS:
     *******************************************/
     //void updateLoggingView(); // no idea why this can't connect automatically
     //void updateLoggingView_sub(); //add
-    void serialSendMocapData();
+    void wifiSendMocapData();
     void pub_cmd(); //add
 
 private slots:
@@ -90,8 +93,8 @@ private slots:
 
     void on_tb_pub_textChanged();
 
-    void SerialRead();
-    void SerialWrite();
+    //void SerialRead();
+    //void SerialWrite();
 
     void on_btn_stopuav_clicked();
 
@@ -103,13 +106,6 @@ private:
 
   float fGain[30];  // gain of uav
 
-  QString m_port;
-  QString m_baudrate;
-  QString m_databit;
-  QString m_check;
-  QString m_stopbit;
-  QString m_FlowControl ;
-
   QString gain_file_name;
   bool is_file_name_set=false;
 
@@ -117,34 +113,36 @@ private:
   const uint8_t sys_id = 9;
   const uint8_t comp_id = 201;
 
-
+  ////////////// tcp config//////////////////////
   //ini类
   QSettings* configini;
   //串口类
-  QSerialPort* SPort;
+  QTcpSocket *tcpClient;
 
-  bool runonce;
+   int m_port;
+  QString m_ip;
   //定时器
   //QTimer * timer;
   //显示当前那时间
   QTime * currenttime;
   bool DisplayTimeStatus;
   //时间间隔time_cycle ms发送一次
- /*QSpinBox * gettime;*/
   int time_cycle;
   //ini路径
   QString PATH;
   QDir * currentPath;
   QPalette palette;
 
+
+
 private:
-  bool setPortConfig();
+  bool setWifiConfig();
   void setcurrentPath();
 
   // config
   void config();
-  void configiniPortRead();
-  void configiniPortWrite();
+  void configiniWifiRead();
+  void configiniWifiWrite();
 
   void configiniGainRead();
   void configiniGainWrite();

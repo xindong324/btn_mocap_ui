@@ -45,7 +45,7 @@ QNode::~QNode() {
 }
 
 bool QNode::init() {
-  ros::init(init_argc,init_argv,"btn");
+  ros::init(init_argc,init_argv,"btn_wifi");
 	if ( ! ros::master::check() ) {
 		return false;
 	}
@@ -62,7 +62,7 @@ bool QNode::init(const std::string &master_url, const std::string &host_url) {
 	std::map<std::string,std::string> remappings;
 	remappings["__master"] = master_url;
 	remappings["__hostname"] = host_url;
-  ros::init(remappings,"btn");
+  ros::init(remappings,"btn_wifi");
 	if ( ! ros::master::check() ) {
 		return false;
 	}
@@ -149,7 +149,7 @@ int QNode::PoseXYZRPY2buffer(uint8_t* buf,float* pose)
   pose[4] =pitch = static_cast<float>(pitch_tmp);
   pose[5] =yaw = static_cast<float>(yaw_tmp);
 
-  pose[3] *= 57.29578f;
+  pose[3] *= 57.29578f; 
   pose[4] *= 57.29578f;
   pose[5] *= 57.29578f;
 

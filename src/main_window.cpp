@@ -13,7 +13,7 @@
 #include <QMessageBox>
 #include <iostream>
 #include <QThread>
-#include <QtSerialPort>
+//#include <QtSerialPort>
 
 #include <QFileDialog>
 #include <qvalidator.h>
@@ -30,6 +30,10 @@ namespace btn {
 
 using namespace Qt;
 
+
+//QT_CHARTS_USE_NAMESPACE
+
+
 /*****************************************************************************
 ** Implementation [MainWindow]
 *****************************************************************************/
@@ -41,7 +45,7 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
 	ui.setupUi(this); // Calling this incidentally connects all ui's triggers to on_...() callbacks in this class.
     QObject::connect(ui.actionAbout_Qt, SIGNAL(triggered(bool)), qApp, SLOT(aboutQt())); // qApp is a global variable for the application
 
-    ReadSettings();
+  ReadSettings();
   setWindowIcon(QIcon(":/images/icon.png"));
 	ui.tab_manager->setCurrentIndex(0); // ensure the first tab is showing - qt-designer should have this already hardwired, but often loses it (settings?).
     //QObject::connect(&qnode, SIGNAL(rosShutdown()), this, SLOT(close()));
@@ -50,24 +54,21 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
   /*********************
 	** Logging
 	**********************/
-  //ui.view_logging->setModel(qnode.loggingModel());
-    //QObject::connect(&qnode, SIGNAL(loggingUpdated()), this, SLOT(updateLoggingView()));
-    //ui.view_logging_sub->setModel(qnode.loggingModel_sub());  //add
-      //QObject::connect(&qnode, SIGNAL(loggingUpdated_sub()), this, SLOT(updateLoggingView_sub()));  //add
-    //QObject::connect(ui.sent_cmd, SIGNAL(clicked()), this, SLOT(pub_cmd()));
 
   /*********************
   ** send pose
   **********************/
-      QObject::connect(&qnode,SIGNAL(poseUpdated()),this,SLOT(serialSendMocapData()));
+      QObject::connect(&qnode,SIGNAL(poseUpdated()),this,SLOT(wifiSendMocapData()));
 
 
       /*********************
       ** Port
       **********************/
-      SPort = new QSerialPort(this);
-      iniPort();
-      runonce = true;
+      tcpClient = new QTcpSocket(this);
+      iniWifi();
+      ui.le_port->setValidator(new QIntValidator(1000,9999,this));
+      ui.le_ip->setInputMask("000.000.000.000");
+      //runonce = true;
     /*********************
     ** Auto Start
     **********************/
@@ -111,31 +112,25 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent)
     ui.edt_k28->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
     ui.edt_k29->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
     ui.edt_k30->setValidator(new QDoubleValidator(-180.0,180.0,4,this));
+
+
 }
 
 MainWindow::~MainWindow()
 {
-  delete SPort;
+  delete tcpClient;
 }
 
 
 //初始化
-void MainWindow::iniPort()
+// 读取设置
+void MainWindow::iniWifi()
 {
-
-    QList<QSerialPortInfo>  infos = QSerialPortInfo::availablePorts();
-    if(infos.isEmpty())
-    {
-        ui.cb_port->addItem(tr("Empty"));
-        return;
-    }
-    foreach (QSerialPortInfo info, infos) {
-        ui.cb_port->addItem(info.portName());
-    }
     //ini配置文件
     config();
-    configiniPortRead();
+    configiniWifiRead();
     configiniGainRead();
+
     //默认选中
     ui.send_gain->setEnabled(false);
     ui.btn_stopuav->setEnabled(false);
@@ -144,81 +139,29 @@ void MainWindow::iniPort()
 void MainWindow::setcurrentPath()
 {
     currentPath = new QDir;
-    PATH = currentPath->currentPath() + "/SerialPort.ini";
+    PATH = currentPath->currentPath() + "/WifiPort.ini";
 }
-void MainWindow::getComboBoxValue()
+void MainWindow::getWifiLineEditValue()
 {
-    m_port = ui.cb_port->currentText();
-    m_baudrate = ui.cb_boadrate->currentText();
-    m_databit = ui.cb_data->currentText();
-    m_check = ui.cb_check->currentText();
-    m_stopbit = ui.cb_stop->currentText();
+    m_port = ui.le_port->text().toInt();
+    m_ip = ui.le_ip->text();
 
 }
 
 //设置串口参数
-bool MainWindow::setPortConfig()
+bool MainWindow::setWifiConfig()
 {
 
-
-    //设置串口号
-    SPort->setPortName(m_port);
-    if(SPort->open(QIODevice::ReadWrite))
+    tcpClient->connectToHost(ui.le_ip->text(), ui.le_port->text().toInt());
+    if(tcpClient->waitForConnected(1000))
     {
-        //设置波特率
-        SPort->setBaudRate(m_baudrate.toInt());
-        //设置数据位
-        switch(m_databit.toInt())
-        {
-            case 5:
-                 SPort->setDataBits(QSerialPort::Data5);break;
-            case 6:
-                 SPort->setDataBits(QSerialPort::Data6);break;
-            case 7:
-                 SPort->setDataBits(QSerialPort::Data7);break;
-            case 8:
-                 SPort->setDataBits(QSerialPort::Data8);break;
-            default: break;
-        }
-        //设置校验位
-        switch(ui.cb_check->currentIndex())
-        {
-            case 0:
-                SPort->setParity(QSerialPort::NoParity);break;
-            case 1:
-                SPort->setParity(QSerialPort::EvenParity);break;
-            case 2:
-                SPort->setParity(QSerialPort::OddParity);break;
-            case 3:
-                SPort->setParity(QSerialPort::SpaceParity);break;
-            case 4:
-                SPort->setParity(QSerialPort::MarkParity);break;
-            default: break;
-        }
-        //设置流控制
-
-        SPort->setFlowControl(QSerialPort::NoFlowControl);
-
-
-        //设置停止位
-        switch(m_stopbit.toInt())
-        {
-            case 1:
-                SPort->setStopBits(QSerialPort::OneStop);
-                 break;
-            case 2:
-                SPort->setStopBits(QSerialPort::TwoStop);
-                break;
-            default: break;
-        }
-
-        //message("config 成功\r\n");
+      return true;
     }
     else{
         QMessageBox::warning(this,tr("warning"),tr("initialization Port failed! Maybe used by others"));
         return false;
     }
-    return true;
+    return false;
 
 
 }
@@ -250,12 +193,11 @@ void MainWindow::on_button_connect_clicked(bool check ) {
     ** Open port
     **********************/
     //写配置信息
-    configiniPortWrite();
+    configiniWifiWrite();
 
-    getComboBoxValue();
-    if(!setPortConfig())
+    getWifiLineEditValue();
+    if(!setWifiConfig())
     { // port err
-
     } // end port err
     else { // port open
       /*********************
@@ -281,16 +223,12 @@ void MainWindow::on_button_connect_clicked(bool check ) {
 
 
       //收到数据运行槽函数
-      if(runonce)//只允许运行一次
-      {
-         connect(SPort,SIGNAL(readyRead()),this,SLOT(SerialRead()));
-      }
-
-      ui.cb_port->setEnabled(false);
-      ui.cb_data->setEnabled(false);
-      ui.cb_stop->setEnabled(false);
-      ui.cb_check->setEnabled(false);
-      ui.cb_boadrate->setEnabled(false);
+      //if(runonce)//只允许运行一次
+      //{
+     //    connect(tcpClient,SIGNAL(readyRead()),this,SLOT(WifiRead()));
+      //}
+      ui.le_ip->setEnabled(false);
+      ui.le_port->setEnabled(false);
 
       ui.send_gain->setEnabled(true);
       ui.btn_stopuav->setEnabled(true);
@@ -305,15 +243,12 @@ void MainWindow::on_button_connect_clicked(bool check ) {
     std::cout<<"bf"<<std::endl;
     ui.button_connect->setText(tr("Connect"));
     //qnode.rosShutdown();
-    runonce = false;
+    //runonce = false;
     qnode.close();
-    SPort->close();
+    tcpClient->disconnectFromHost();
     std::cout<<"aft"<<std::endl;
-    ui.cb_port->setEnabled(true);
-    ui.cb_data->setEnabled(true);
-    ui.cb_stop->setEnabled(true);
-    ui.cb_check->setEnabled(true);
-    ui.cb_boadrate->setEnabled(true);
+    ui.le_port->setEnabled(true);
+    ui.le_ip->setEnabled(true);
     ui.send_gain->setEnabled(false);
     ui.btn_stopuav->setEnabled(false);
 
@@ -322,6 +257,7 @@ void MainWindow::on_button_connect_clicked(bool check ) {
 
 }
 
+/*
 void MainWindow::SerialRead()
 {
 
@@ -331,6 +267,7 @@ void MainWindow::SerialWrite()
 {
 
 }
+*/
 
 //获取当前路径并创建ini对象
 void MainWindow::config()
@@ -339,33 +276,22 @@ void MainWindow::config()
     configini = new QSettings(PATH, QSettings::IniFormat);
 }
 //从ini文件读取并设置为上次配置
-void MainWindow::configiniPortRead()
+void MainWindow::configiniWifiRead()
 {
     configini->beginGroup("SETUP");
-    int i_m_port = configini->value("COM").toInt();
-    int i_m_baudrate = configini->value("baudrate").toInt();
-    int i_m_databit = configini->value("databit").toInt();
-    int i_m_check = configini->value("check").toInt();
-    int i_m_stopbit = configini->value("stopbit").toInt();
-    //int i_m_FlowControl = configini->value("flow").toInt();
+    QString s_m_port = configini->value("Ip").toString();
+    int i_m_port = configini->value("Port").toInt();
     configini->endGroup();
 
-    ui.cb_port->setCurrentIndex(i_m_port);
-    ui.cb_boadrate->setCurrentIndex(i_m_baudrate);
-    ui.cb_data->setCurrentIndex(i_m_databit);
-    ui.cb_check->setCurrentIndex(i_m_check);
-    ui.cb_stop->setCurrentIndex(i_m_stopbit);
-    //ui->cb_flow->setCurrentIndex(i_m_FlowControl);
+    ui.le_ip->setText(s_m_port);
+    ui.le_port->setText(QString::number(i_m_port));
 }
 //将配置信息写入ini文件
-void MainWindow::configiniPortWrite()
+void MainWindow::configiniWifiWrite()
 {
     configini->beginGroup("SETUP");
-    configini->setValue("COM",ui.cb_port->currentIndex());
-    configini->setValue("baudrate",ui.cb_boadrate->currentIndex());
-    configini->setValue("databit",ui.cb_data->currentIndex());
-    configini->setValue("check",ui.cb_check->currentIndex());
-    configini->setValue("stopbit",ui.cb_stop->currentIndex());
+    configini->setValue("Ip",ui.le_ip->text());
+    configini->setValue("Port",ui.le_port->text());
     //configini->setValue("flow",ui->CB_flow->currentIndex());
     configini->endGroup();
 }
@@ -540,7 +466,6 @@ void MainWindow::ReadSettings() {
     if ( checked ) {
     	ui.line_edit_master->setEnabled(false);
     	ui.line_edit_host->setEnabled(false);
-    	//ui.line_edit_topic->setEnabled(false);
     }
 }
 
@@ -548,7 +473,6 @@ void MainWindow::WriteSettings() {
     QSettings settings("Qt-Ros Package", "btn");
     settings.setValue("master_url",ui.line_edit_master->text());
     settings.setValue("host_url",ui.line_edit_host->text());
-    //settings.setValue("topic_name",ui.line_edit_topic->text());
     settings.setValue("use_environment_variables",QVariant(ui.checkbox_use_environment->isChecked()));
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
@@ -577,9 +501,9 @@ void MainWindow::pub_cmd()
  *     QString str = QString::number(f, ‘f’, 6);
  *    QString str = QString("%1").arg(f, 0, ‘f’, 6);
  * ********************************************/
-void MainWindow::serialSendMocapData()
+void MainWindow::wifiSendMocapData()
 {
-  uint8_t buf[1000];
+  uint8_t buf[256];
   int len;
   float msg[6];
 
@@ -594,9 +518,32 @@ void MainWindow::serialSendMocapData()
     {
       len = qnode.PoseXYZRPY2buffer(buf,msg);
     }
-    SPort->write(reinterpret_cast<char*>(buf),len);
+    tcpClient->write(reinterpret_cast<char*>(buf),len);
+    tcpClient->flush();
     qApp->processEvents();
+    // show on chart
+    QDateTime now = QDateTime::currentDateTime();
 
+
+//    qreal dwidth= chart.plotArea().width()/(max_DataSize); //一次滚动多少宽度
+//    qreal roll = static_cast<qreal>(msg[0]);
+//    //std::cout<<"roll"<<roll<<std::endl;
+
+//    if(m_rollseries.count()>=max_DataSize)
+//    {
+//      m_rollseries.remove(0);
+//      QDateTime BeginTime = now.addMSecs((qint64)max_DataSize*(-1)*TimerBreaks);
+//      //chart.createDefaultAxes();
+//      dateAxisX.setMin(BeginTime);
+//      dateAxisX.setMax(now);
+//    }
+//    m_rollseries.append(now.toMSecsSinceEpoch(),roll);
+//    m_rollseries.show();
+
+
+
+
+    // show on edit
     ui.edt_x->setText(QString("%1").arg(msg[0]));
     ui.edt_y->setText(QString("%1").arg(msg[1]));
     ui.edt_z->setText(QString("%1").arg(msg[2]));
@@ -788,7 +735,7 @@ void btn::MainWindow::on_send_gain_clicked()
 
   qnode.log_info(msg);
 
-  SPort->write(reinterpret_cast<char*>(buf),len);
+  tcpClient->write(reinterpret_cast<char*>(buf),len);
   qApp->processEvents();
   QString qmsg =  QString::fromStdString(msg);
   ui.tb_pub->append(qmsg);
@@ -817,7 +764,7 @@ void btn::MainWindow::on_btn_stopuav_clicked()
 
   qnode.log_info(msg);
 
-  SPort->write(reinterpret_cast<char*>(buf),len);
+  tcpClient->write(reinterpret_cast<char*>(buf),len);
   qApp->processEvents();
 
   QString qmsg =  QString::fromStdString(msg);

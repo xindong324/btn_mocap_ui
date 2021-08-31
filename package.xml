@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package>
-  <name>btn</name>
+  <name>btn_wifi</name>
   <version>0.1.0</version>
   <description>
 
-     btn
+     btn_wifi
 
   </description>
   <maintainer email="dwy@gmail.com">dwy</maintainer>

@@ -3,7 +3,7 @@
 ##############################################################################
 
 cmake_minimum_required(VERSION 2.8.0)
-project(btn)
+project(btn_wifi)
 
 add_compile_options(-std=c++11)
 #important set to use combobox
@@ -31,8 +31,8 @@ catkin_package()
 # this comes from qt_build's qt-ros.cmake which is automatically 
 # included via the dependency call in package.xml
 #rosbuild_prepare_qt4(QtCore QtGui QTSerialPort) # Add the appropriate components to the component list here
-find_package(Qt5 REQUIRED Core Widgets SerialPort Charts)
-set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort Qt5::Charts)
+find_package(Qt5 REQUIRED Core Widgets SerialPort Charts Network)
+set(QT_LIBRARIES Qt5::Widgets Qt5::SerialPort Qt5::Charts Qt5::Network)
 ##############################################################################
 # Sections
 ##############################################################################
@@ -58,7 +58,7 @@ file(GLOB_RECURSE QT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINK
 # Binaries
 ##############################################################################
 
-add_executable(btn ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
-target_link_libraries(btn ${QT_LIBRARIES} ${catkin_LIBRARIES})
-install(TARGETS btn RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+add_executable(btn_wifi ${QT_SOURCES} ${QT_RESOURCES_CPP} ${QT_FORMS_HPP} ${QT_MOC_HPP})
+target_link_libraries(btn_wifi ${QT_LIBRARIES} ${catkin_LIBRARIES})
+install(TARGETS btn_wifi RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
